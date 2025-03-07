@@ -19,6 +19,8 @@ Das **RandomItemXP** Plugin für **Minecraft** fügt ein zufälliges Item-System
 ## Verwendung
 
 - **/getRandomizer:** Dieser Befehl gibt dem Spieler das "Randomizer"-Item, das verwendet werden kann, um zufällige Items zu erhalten.
+- **/startlevelrandomizer:** Dieser Befehl startet das Plugin und dekativiert dementsprechend Block und Mob Drops
+- **/stoplevelrandomizer:** Dieser Befehl deaktiviert das Plugin und aktiviert Block und Mob Drops wieder
 
 ### Wie funktioniert der Randomizer?
 
