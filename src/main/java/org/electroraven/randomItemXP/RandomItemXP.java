@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.ItemStack;
@@ -25,7 +26,6 @@ import java.util.Random;
 
 public final class RandomItemXP extends JavaPlugin implements Listener {
     private final Random random = new Random();
-    private final NamespacedKey placedBlockKey = new NamespacedKey(this, "placed");
     private boolean isLevelRandomizerActive = false;
 
     @Override
@@ -69,27 +69,27 @@ public final class RandomItemXP extends JavaPlugin implements Listener {
         return false;
     }
 
-    @EventHandler
-    public void onPlayerUse(PlayerInteractEvent event) {
-        if (isLevelRandomizerActive) {
-            Player player = event.getPlayer();
-            if (player.getInventory().getItemInMainHand().getType() == Material.STICK) {
-                int levels = player.getLevel();
-                if (levels > 0) {
-                    player.setLevel(0);
-                    ItemStack randomItem = createRandomItem(levels);
-                    player.getInventory().addItem(randomItem);
-                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
-                    player.spawnParticle(Particle.ENCHANT, player.getLocation(), 10);
+        @EventHandler
+        public void onPlayerUse(PlayerInteractEvent event) {
+            // Nur aktiv, wenn der Level Randomizer aktiv ist
+            if (isLevelRandomizerActive) {
+                Player player = event.getPlayer();
+                if (player.getInventory().getItemInMainHand().getType() == Material.STICK) {
+                    int levels = player.getLevel();
+                    if (levels > 0) {
+                        player.setLevel(0);
+                        ItemStack randomItem = createRandomItem(levels);
+                        player.getInventory().addItem(randomItem);
+                        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                        player.spawnParticle(Particle.ENCHANT, player.getLocation(), 10);
+                    }
                 }
             }
         }
-    }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         if (isLevelRandomizerActive) {
-            // Markiere den Block als vom Spieler platziert
             event.getBlock().getState().setMetadata("placed", new org.bukkit.metadata.FixedMetadataValue(this, true));
         }
     }
@@ -98,8 +98,15 @@ public final class RandomItemXP extends JavaPlugin implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         if (isLevelRandomizerActive) {
             if (!event.getBlock().hasMetadata("placed")) {
-                event.setDropItems(false); // Wenn der Block nicht platziert wurde, keine Drops
+                event.setDropItems(false); // Wenn der Block nicht vom Spieler platziert wurde, keine Drops
             }
+        }
+    }
+
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event) {
+        if (isLevelRandomizerActive) {
+            event.blockList().forEach(block -> block.setType(Material.AIR));  // Setzt die zerstörten Blöcke auf Luft, um die Zerstörung durch Explosion zu simulieren
         }
     }
 
@@ -112,13 +119,15 @@ public final class RandomItemXP extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent event) {
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                for (int y = 0; y < event.getWorld().getMaxHeight(); y++) {
-                    Block block = event.getChunk().getBlock(x, y, z);
-                    if (block.getType() == Material.CHEST) {
-                        Chest chest = (Chest) block.getState();
-                        chest.getInventory().clear();
+        if (isLevelRandomizerActive) {
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    for (int y = 0; y < event.getWorld().getMaxHeight(); y++) {
+                        Block block = event.getChunk().getBlock(x, y, z);
+                        if (block.getType() == Material.CHEST) {
+                            Chest chest = (Chest) block.getState();
+                            chest.getInventory().clear(); // Leere den Inhalt der generierten Truhe
+                        }
                     }
                 }
             }
@@ -145,6 +154,8 @@ public final class RandomItemXP extends JavaPlugin implements Listener {
         }
         return item;
     }
+
+
 
     private Material getRandomMaterial() {
         List<Material> materials = List.of(Material.values());
