@@ -1,0 +1,7 @@
+name: RandomItemXP
+version: 1.0
+main: org.electroraven.randomItemXP.RandomItemXP
+commands:
+  getRandomizer:
+    description: Gives a randomizer item.
+    usage: /getRandomizer
