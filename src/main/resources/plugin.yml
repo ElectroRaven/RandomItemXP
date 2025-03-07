@@ -5,3 +5,9 @@ commands:
   getRandomizer:
     description: Gives a randomizer item.
     usage: /getRandomizer
+  startlevelrandomizer:
+    description: Activates the level randomizer system.
+    usage: /startlevelrandomizer
+  stoplevelrandomizer:
+    description: Deactivates the level randomizer system.
+    usage: /stoplevelrandomizer
